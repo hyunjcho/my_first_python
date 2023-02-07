@@ -39,7 +39,7 @@ def date_open(d_ago,data_str):
         thirty_day = datetime.timedelta(days=days_ago)
         sd = today - thirty_day
         some_day = '{:%Y-%m-%d}'.format(sd)
-        #print('{0} days ago from today is {1} {2}'.format(days_ago,sd,calendar.day_name[sd.weekday()]))
+        print('{0} days from today is {1} {2}'.format(days_ago,sd,calendar.day_name[sd.weekday()]))
         search_result = re.search(some_day,data_str)
         if search_result is not None:
             #print('good')
@@ -53,20 +53,53 @@ def date_open(d_ago,data_str):
     
     return final_day
 
-chart_type = input('Type my/0,10,20,30,40,50: ')
-chart_range = int(input('Type 5,30,60,90,120,364: '))
+def indices(l, val):
+    return [index for index, value in enumerate(l) if value == val]
+
+
+header = pd.read_csv("analysis.csv",nrows=1).columns
+list_header = header.tolist()
+
+
 
 df1 = pd.read_csv("analysis.csv")
 # This is the way to convert to panda db to numpy matrix
 numpy_matrix = df1.values
 
-input_dict = {5:4,30:5,60:6,90:7,120:8,364:9}
-sixty = np.array(numpy_matrix[:,input_dict[chart_range]])
+
+head_name = ['7day','30day','60day','90day','364day']
+index_all = []
+for bx in head_name:
+    index_all.append(indices(list_header,bx)[0])
+
+#print(index_all)
+
+my =[]
+with open('record.csv', 'r') as f:
+    reader = csv.reader(f, delimiter=',')
+    for row in reader:
+        my.append(row[0]) 
+
+print(my)
+
+chart_type = input('Type my/0,10,20,30,40,50: ')
+chart_range = int(input('Type 7,30,60,90,364: '))
+
+ix = str(chart_range)+'day'
+l_index = indices(list_header,ix)
+
+
+#input_dict = {5:4,30:5,60:6,90:7,120:8,364:9}
+sixty = np.array(numpy_matrix[:,l_index[0]])
 ticket = numpy_matrix[:,0]
 sixty_idx = np.argsort(-sixty)
+tick = numpy_matrix[:,0]
+#print(sixty)
+#print(ticket)
+#print(sixty_idx)
+#exit()
 
 if chart_type == 'my':
-    my = ['SPY','AAPL','NVDA','AMAT','GS','PI','AMD','INTC','SQ','JNJ','AMZN','MSFT','TWTR','SFIX']
     rng = len(my)
     symbole =[]
 else:
@@ -80,28 +113,23 @@ else:
         my.append(ticket[sixty_idx[j]])
 
 
-
-
-tick = numpy_matrix[:,0]
-
 ref_sym = ['SPY']
 ref_dic = dict()
-for cmp in input_dict:
+for cmp in index_all:
     tx_idx = np.where(tick == ref_sym[0])
     tt = list(tx_idx[0])[0]
-    ref = numpy_matrix[:,input_dict[cmp]]
+    ref = numpy_matrix[:,cmp]
     ref_dic[cmp] = ref[tt]
 
 #print(ref_dic)
 
-f1 = plt.figure(1)
 for sm in my:
     main_dic = dict()
     mail_list = []
-    for cmp in input_dict:
+    for cmp in index_all:
         tx_idx = np.where(tick == sm)
         tt = list(tx_idx[0])[0]
-        main = numpy_matrix[:,input_dict[cmp]]
+        main = numpy_matrix[:,cmp]
         #main_dic[cmp] = main[tt]-ref_dic[cmp]
         main_dic[cmp] = main[tt]
 
@@ -109,7 +137,7 @@ for sm in my:
     zx = list(map(lambda n: "%.2f" % n, main_list))
     z = list(map(float,zx))
     print(sm,z)
-    plt.plot(z)
+   
 
 
 plt.gca().legend(my)
@@ -119,7 +147,7 @@ plt.gca().legend(my)
 
 ### This is a graphic module ##
 
-six = np.array(numpy_matrix[:,input_dict[chart_range]])
+six = np.array(numpy_matrix[:,l_index])
 
 ticket=np.array([])
 sixty=np.array([])
@@ -132,27 +160,23 @@ for tx in my:
     ticket=np.append(ticket,tick[tt])
     sixty =np.append(sixty,six[tt])
 
-#print(ticket,sixty)
-
-
 sixty_idx = np.argsort(-sixty)
 
 #for idx in sixty_idx:
     #print(ticket[idx], sixty[idx])
 
-f = open('xdb4.json')
+f = open('xdb_temp.json')
 data = json.load(f)
 
 aa=data['SPY']
 data_str = json.dumps(aa)
 some_day = date_open(chart_range+1,data_str)
 #print(some_day)
+#exit()
 
 for i in range(rng):
     #print(ticket[sixty_idx[i]])
     symbole.append(ticket[sixty_idx[i]])
-
-#print(symbole)
 
 jorah = {}
 theon =dict()
@@ -166,22 +190,21 @@ for sym in symbole:
     for value_dict in result:
         dic[value_dict['date']]=float(value_dict['price'])
 
-
     dic = {k:v for (k,v) in dic.items() if k > some_day}
     theon[sym]=list(dic.values())
 
+#print(theon[sym])
 
 y = list(dic.values())
 x = range(len(y)) 
 labels = list(dic.keys())
 
-f2 = plt.figure(2)
+#f2 = plt.figure(2)
 for sym in symbole:
     start = list(theon[sym])[0]
-    #print(type(start),start)
+    #print(start)
     y = [ (i/start-1)*100 for i in theon[sym]]
-    #print(type(y))
-    plt.plot(x,y)
+    plt.plot(x,y,marker='*')
 
 plt.gca().legend(symbole)
 

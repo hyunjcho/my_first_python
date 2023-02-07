@@ -10,10 +10,13 @@ import matplotlib.pyplot as plt
 from matplotlib.dates import DayLocator, HourLocator, DateFormatter, drange
 from numpy import arange
 
-#symbole = ['AAPL','QCOM','CMG']
-symbole = ['PRU']
+symbole = ['ZEN','CTXS','PZN','NUAN','TWTR']
 
-f = open('xdb2.json')
+# python remove.py
+# copy.bat
+
+
+f = open('xdb_main.json')
 data = json.load(f)
 #print(type(data))
 print(data.keys())
@@ -26,5 +29,5 @@ for sym in symbole:
 #del data['AAPL']
 print(data.keys())
 
-fx = open('xdb2.json','w')
+fx = open('xdb_temp.json','w')
 fx.write(json.dumps(data))
